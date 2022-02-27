@@ -11,18 +11,18 @@ The application consists of three major elements:
 
 - The web UI is in the `wordfinder-vue` folder. It's a Vue.js 2.x application
 
-##Development Instructions
+## Development Instructions
 When updating the application it's simplest to run the Spring Boot application `wordfinderservice` and the
 Vue application `wordfinder-vue` separately.
 
-###wordfinderservice Local Execution
+### wordfinderservice Local Execution
 In `pom.xml` comment out the `<scope>provided</scope>` for `spring-boot-starter-tomcat`
 Run the application. The server will listen on port 5000.
 
-###wordfinder-vue Local Execution
+### wordfinder-vue Local Execution
 In `WordFinderService.js` uncomment the `baseUrl` set to `localhost:5000` and comment out the one set to `'.'`
 
-##Deployment Instructions
+## Deployment Instructions
 
 ### wordfinderservice Deployment Prep
 
