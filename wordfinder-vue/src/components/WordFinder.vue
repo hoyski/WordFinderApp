@@ -12,12 +12,7 @@
     <div id="app">
       <div id="letters">
         Letters:
-        <input
-          @input="getWords"
-          v-model="characters"
-          id="charactersInput"
-          class="foundword"
-        />
+        <input @input="getWords" v-model="characters" id="charactersInput" />
         <button class="btn btn-outline-dark" @click="clearLetters">
           Clear
         </button>
@@ -30,6 +25,37 @@
         </button>
         <div class="helpertext">Use an underscore to match any letter</div>
       </div>
+
+      <!--
+				Defintion display
+			-->
+      <div v-show="showDefinition" id="definition">
+        <div id="close-button" @click="showDefinition = false">Close</div>
+        <div v-if="definition != undefined">
+          <strong>{{ definition.word }}</strong> -
+          <i>{{ definition.phonetic }}</i
+          ><br />
+          <div
+            v-for="(meaning, index) in definition.meanings"
+            v-bind:key="index"
+          >
+            <i>{{ meaning.partOfSpeech }}</i
+            ><br />
+            <ul>
+              <li
+                v-for="(def, defIndex) in meaning.definitions"
+                v-bind:key="defIndex"
+              >
+                {{ def.definition }}<br />
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!--
+				Found words
+			-->
       <div class="error" v-if="errorMsg">
         <pre>{{ errorMsg }}</pre>
       </div>
@@ -78,7 +104,9 @@
                 words[index - 1].length != words[index].length
               "
             />
-            {{ word }}
+            <span @click="getDefinition(word)" class="foundWord"
+              >{{ word }}
+            </span>
           </span>
         </div>
       </div>
@@ -88,6 +116,7 @@
 
 <script>
 import wordFinderService from "@/services/WordFinderService.js";
+import definitionService from "@/services/DefinitionService.js";
 
 export default {
   name: "WordFinder",
@@ -102,6 +131,8 @@ export default {
       badRequest: false,
       errorMsg: "",
       pattern: "",
+      showDefinition: false,
+      definition: undefined,
     };
   },
   computed: {
@@ -189,6 +220,18 @@ export default {
       document.getElementById(inputId).focus();
       this.getWords();
     },
+    getDefinition(word) {
+      this.definition = undefined;
+      definitionService
+        .getDefinition(word)
+        .then((response) => {
+          this.definition = response.data[0];
+        })
+        .catch(() => {
+          this.definition = { word: "No definition found for " + word };
+        });
+      this.showDefinition = true;
+    },
   },
 };
 </script>
@@ -228,5 +271,24 @@ button {
 
 .text-monospace {
   font-family: monospace;
+}
+
+#definition {
+  border: 1px solid black;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+#close-button {
+  font-size: 1.25em;
+  float: right;
+}
+
+#close-button:hover {
+  text-decoration: underline;
+}
+
+.foundWord:hover {
+  text-decoration: underline;
 }
 </style>
