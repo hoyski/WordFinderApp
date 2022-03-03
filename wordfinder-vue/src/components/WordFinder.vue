@@ -92,10 +92,7 @@
         <br />
         <br />
         <div>
-          <span
-            v-for="(word, index) in words"
-            :key="index"
-          >
+          <span v-for="(word, index) in words" :key="index">
             <hr
               v-if="
                 index > 0 &&
@@ -103,8 +100,9 @@
                 words[index - 1].length != words[index].length
               "
             />
-            <span @click="getDefinition(word)" class="foundWord"
-              >{{ word }}</span>
+            <span @click="getDefinition(word)" class="foundWord">{{
+              word
+            }}</span>
           </span>
         </div>
       </div>
@@ -237,6 +235,11 @@ export default {
           this.definition = { word: "No definition found for " + word };
         });
       this.showDefinition = true;
+      document.getElementById("pattern").scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest",
+      });
     },
   },
 };
