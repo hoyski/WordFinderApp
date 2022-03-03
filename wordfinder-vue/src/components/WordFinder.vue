@@ -27,7 +27,7 @@
       </div>
 
       <!--
-				Defintion display
+				Definition display
 			-->
       <div v-show="showDefinition" id="definition">
         <div id="close-button" @click="showDefinition = false">Close</div>
@@ -93,7 +93,6 @@
         <br />
         <div>
           <span
-            class="text-monospace"
             v-for="(word, index) in words"
             :key="index"
           >
@@ -105,8 +104,7 @@
               "
             />
             <span @click="getDefinition(word)" class="foundWord"
-              >{{ word }}
-            </span>
+              >{{ word }}</span>
           </span>
         </div>
       </div>
@@ -225,7 +223,15 @@ export default {
       definitionService
         .getDefinition(word)
         .then((response) => {
-          this.definition = response.data[0];
+          // Collapse all of the definitions into a single definition
+          this.definition = {};
+          this.definition.word = response.data[0].word;
+          this.definition.meanings = [];
+          for (let def of response.data) {
+            for (let meaning of def.meanings) {
+              this.definition.meanings.push(meaning);
+            }
+          }
         })
         .catch(() => {
           this.definition = { word: "No definition found for " + word };
@@ -269,10 +275,6 @@ button {
   font-size: 80%;
 }
 
-.text-monospace {
-  font-family: monospace;
-}
-
 #definition {
   border: 1px solid black;
   border-radius: 8px;
@@ -286,6 +288,12 @@ button {
 
 #close-button:hover {
   text-decoration: underline;
+}
+
+.foundWord {
+  display: inline-block;
+  font-family: monospace;
+  padding-right: 1em;
 }
 
 .foundWord:hover {
