@@ -11,14 +11,14 @@
     </p>
     <div id="app">
       <div id="letters">
-        Letters:
+        <span>Letters:</span>
         <input @input="getWords" v-model="characters" id="charactersInput" />
         <button class="btn btn-outline-dark" @click="clearLetters">
           Clear
         </button>
       </div>
       <div id="pattern">
-        Pattern:
+        <span>Pattern:</span>
         <input @input="getWords" v-model="pattern" id="patternInput" />
         <button class="btn btn-outline-dark" @click="clearPattern">
           Clear
@@ -29,12 +29,15 @@
       <!--
 				Definition display
 			-->
+      <span id="definiton-scrollto" />
       <div v-show="showDefinition" id="definition">
         <div id="close-button" @click="showDefinition = false">Close</div>
         <div v-if="definition != undefined">
-          <strong>{{ definition.word }}</strong> -
-          <i>{{ definition.phonetic }}</i
-          ><br />
+          <strong>{{ definition.word }}</strong
+          ><span v-if="definition.phonetic">
+            - <i>{{ definition.phonetic }}</i></span
+          >
+          <br />
           <div
             v-for="(meaning, index) in definition.meanings"
             v-bind:key="index"
@@ -221,21 +224,15 @@ export default {
       definitionService
         .getDefinition(word)
         .then((response) => {
-          // Collapse all of the definitions into a single definition
-          this.definition = {};
-          this.definition.word = response.data[0].word;
-          this.definition.meanings = [];
-          for (let def of response.data) {
-            for (let meaning of def.meanings) {
-              this.definition.meanings.push(meaning);
-            }
-          }
+          this.definition = definitionService.reduceDefinition(response.data);
         })
         .catch(() => {
           this.definition = { word: "No definition found for " + word };
         });
       this.showDefinition = true;
-      document.getElementById("pattern").scrollIntoView({
+
+      // Scroll the always displayed element "definiton-scrollto" into view
+      document.getElementById("definiton-scrollto").scrollIntoView({
         behavior: "smooth",
         block: "end",
         inline: "nearest",
@@ -291,6 +288,7 @@ button {
 
 #close-button:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
 
 .foundWord {
@@ -301,5 +299,6 @@ button {
 
 .foundWord:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
 </style>
