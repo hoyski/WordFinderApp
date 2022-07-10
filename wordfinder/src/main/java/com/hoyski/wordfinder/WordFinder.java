@@ -3,19 +3,21 @@ package com.hoyski.wordfinder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class WordFinder {
 
     private static final int MAX_MAX_WORDS_TO_RETURN = 1000;
 
     private List<String> dictionary;
+    private Map<String, BeginEndPos> firstTwoLetterPosMap;
 
     public WordFinder() {
-        loadDictionary();
+        this(true);
+    }
+
+    public WordFinder(boolean sortDictionaryLengthFirst) {
+        loadDictionary(sortDictionaryLengthFirst);
     }
 
     public FoundWords findWords(String letters, int minimumWordLength, String pattern, int indexOfFirst,
@@ -116,6 +118,42 @@ public class WordFinder {
         }
     }
 
+    /**
+     * Returns whether or not <code>candidateWord</code> is an actual word
+     */
+    public boolean isWord(String candidateWord) {
+        return Collections.binarySearch(dictionary, candidateWord.toUpperCase()) >= 0;
+    }
+
+    /**
+     * Returns whether or not there are words in the dictionary that start
+     * with the letters <code>firstLetters</code>
+     *
+     * @param firstLetters
+     * @return
+     */
+    public boolean wordsExistThatStartWith(String firstLetters) {
+        if (firstLetters.length() <= 1) {
+            return true;
+        }
+
+        firstLetters = firstLetters.toUpperCase();
+
+        BeginEndPos beginEndPos = firstTwoLetterPosMap.get(firstLetters.substring(0, 2));
+        if (beginEndPos == null) {
+            return false;
+        }
+
+        for (int i = beginEndPos.getBeginPos(); i <= beginEndPos.getEndPos(); i++) {
+            if (dictionary.get(i).startsWith(firstLetters)) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     private boolean matchesPattern(String pattern, String candidateWord) {
         if (pattern.length() == 0) {
             // Not matching on a pattern so everything matches
@@ -136,24 +174,35 @@ public class WordFinder {
         return true;
     }
 
-    private void loadDictionary() {
+    private void loadDictionary(boolean sortDictionaryLengthFirst) {
         String word;
 
         dictionary = new ArrayList<>();
+        firstTwoLetterPosMap = new HashMap<>();
+        int lineNum = 0;
 
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(this.getClass().getResourceAsStream("/words.txt")))) {
             while ((word = br.readLine()) != null) {
-                if (word.toLowerCase().equals(word)) {
-                    // 'word' is all lowercase. Add it to to the dictionary
-                    dictionary.add(word.toUpperCase());
+                word = word.toUpperCase();
+                dictionary.add(word);
+                String firstTwo = word.substring(0, 2);
+                if (!firstTwoLetterPosMap.containsKey(firstTwo)) {
+                    // First occurrence
+                    firstTwoLetterPosMap.put(firstTwo, new BeginEndPos(lineNum));
+                } else {
+                    firstTwoLetterPosMap.get(firstTwo).setEndPos(lineNum);
                 }
+                lineNum++;
+
             }
         } catch (IOException e) {
             throw new RuntimeException("Error loading words.txt", e);
         }
 
-        dictionary.sort(new LengthFirstComparator());
+        if (sortDictionaryLengthFirst) {
+            dictionary.sort(new LengthFirstComparator());
+        }
     }
 
     /**
@@ -190,5 +239,32 @@ public class WordFinder {
         }
 
         return numChars;
+    }
+
+    private static class BeginEndPos {
+        private int beginPos;
+        private int endPos;
+
+        public BeginEndPos(int beginPos) {
+            this.beginPos = beginPos;
+            this.endPos = beginPos;
+        }
+
+        public int getBeginPos() {
+            return beginPos;
+        }
+
+        public void setBeginPos(int beginPos) {
+            this.beginPos = beginPos;
+        }
+
+        public int getEndPos() {
+            return endPos;
+        }
+
+        public void setEndPos(int endPos) {
+            this.endPos = endPos;
+        }
+
     }
 }
